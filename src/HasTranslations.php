@@ -105,12 +105,14 @@ trait HasTranslations
     {
         if ($key !== null) {
             $this->guardAgainstNonTranslatableAttribute($key);
+            
+            $attributes = json_decode($this->getAttributes()[$key] ?? '' ?: '{}', true);
+            $attributes = is_int($attributes) ? null : $attributes;
+            $attributes = !is_array($attributes) ? null : $attributes;
 
-            return array_filter(
-                json_decode($this->getAttributes()[$key] ?? '' ?: '{}', true) ?: [],
-                fn ($value, $locale) => $this->filterTranslations($value, $locale, $allowedLocales),
-                ARRAY_FILTER_USE_BOTH,
-            );
+            return array_filter($attributes ?: [], function ($value) {
+                return $value !== null && $value !== '';
+            });
         }
 
         return array_reduce($this->getTranslatableAttributes(), function ($result, $item) use ($allowedLocales) {
